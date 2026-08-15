@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude AI - by Andres</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: #0d0d0d;
+            color: #ececec;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background: #1a1a1a;
+            border-right: 1px solid #2d2d2d;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            margin-bottom: 20px;
+            background: #2d2d2d;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .sidebar-header:hover {
+            background: #3d3d3d;
+        }
+
+        .sidebar-header .icon {
+            font-size: 24px;
+        }
+
+        .sidebar-header .text {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .new-chat-btn {
+            width: 100%;
+            padding: 12px;
+            background: #2d2d2d;
+            border: 1px solid #3d3d3d;
+            color: #ececec;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .new-chat-btn:hover {
+            background: #3d3d3d;
+            border-color: #4d4d4d;
+        }
+
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chat-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #999;
+            transition: all 0.3s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-item:hover {
+            background: #2d2d2d;
+            color: #ececec;
+        }
+
+        .chat-item.active {
+            background: #3d3d3d;
+            color: #ececec;
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid #2d2d2d;
+            padding-top: 16px;
+            padding-bottom: 10px;
+        }
+
+        .sidebar-footer-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #999;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-footer-item:hover {
+            background: #2d2d2d;
+            color: #ececec;
+        }
+
+        /* MAIN CONTENT */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0d0d0d;
+        }
+
+        .chat-header {
+            border-bottom: 1px solid #2d2d2d;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message-avatar.user {
+            background: #3d3d3d;
+        }
+
+        .message-avatar.assistant {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: #2d2d2d;
+            color: #ececec;
+        }
+
+        .message.assistant .message-content {
+            background: transparent;
+            color: #ececec;
+        }
+
+        .message.assistant .message-content code {
+            background: #1a1a1a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            color: #88d498;
+        }
+
+        .message.assistant .message-content pre {
+            background: #1a1a1a;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+
+        .typing {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .typing span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(-10px);
+            }
+        }
+
+        /* INPUT */
+        .input-area {
+            border-top: 1px solid #2d2d2d;
+            padding: 16px 32px;
+            background: #0d0d0d;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .input-box {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #2d2d2d;
+            border: 1px solid #3d3d3d;
+            border-radius: 24px;
+            padding: 12px 16px;
+            transition: all 0.3s;
+        }
+
+        .input-box:focus-within {
+            border-color: #667eea;
+            background: #353535;
+        }
+
+        .input-box textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #ececec;
+            resize: none;
+            max-height: 100px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .input-box textarea::placeholder {
+            color: #666;
+        }
+
+        .input-box textarea:focus {
+            outline: none;
+        }
+
+        .feature-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-btn:hover {
+            color: #667eea;
+            transform: scale(1.1);
+        }
+
+        .send-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #667eea;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .send-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* FEATURE MENU */
+        .feature-menu {
+            position: absolute;
+            bottom: 100px;
+            left: 280px;
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 12px;
+            padding: 12px;
+            display: none;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            width: 400px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .feature-menu.active {
+            display: grid;
+        }
+
+        .feature-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 8px;
+            background: #2d2d2d;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+
+        .feature-item:hover {
+            background: #3d3d3d;
+            transform: scale(1.05);
+        }
+
+        .feature-item .icon {
+            font-size: 20px;
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3d3d3d;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4d4d4d;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .chat-header-title,
+            .new-chat-btn {
+                display: none;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+
+            .chat-container {
+                padding: 12px 16px;
+            }
+
+            .input-area {
+                padding: 12px 16px;
+            }
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid #2d2d2d;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .modal-content {
+            color: #999;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .modal-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .modal-btn.primary:hover {
+            background: #764ba2;
+        }
+
+        .modal-btn.secondary {
+            background: #2d2d2d;
+            color: #ececec;
+        }
+
+        .modal-btn.secondary:hover {
+            background: #3d3d3d;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 16px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+        }
+
+        .error-message {
+            background: #2a1a1a;
+            border: 1px solid #8b3a3a;
+            border-radius: 8px;
+            padding: 12px;
+            color: #ff6b6b;
+            margin-bottom: 12px;
+        }
+
+        .success-message {
+            background: #1a2a1a;
+            border: 1px solid #3a8b3a;
+            border-radius: 8px;
+            padding: 12px;
+            color: #88d498;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-header" onclick="newChat()">
+                <div class="icon">✨</div>
+                <div class="text">Claude AI</div>
+            </div>
+
+            <button class="new-chat-btn" onclick="newChat()">+ Percakapan Baru</button>
+
+            <div class="chat-history" id="chatHistory">
+                <!-- Chat history akan ditambahkan di sini -->
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-item" onclick="showSettings()">
+                    <span>⚙️</span>
+                    <span>Pengaturan</span>
+                </div>
+                <div class="sidebar-footer-item" onclick="showAbout()">
+                    <span>ℹ️</span>
+                    <span>Tentang</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main">
+            <div class="chat-header">
+                <div class="chat-header-title">Claude AI - by Andres</div>
+                <div style="color: #666; font-size: 12px;">v2.0 | 100 Fitur AI</div>
+            </div>
+
+            <div class="chat-container" id="chatContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🤖</div>
+                    <div style="font-size: 16px; font-weight: 600; color: #ececec;">Selamat datang di Claude AI</div>
+                    <div style="font-size: 14px;">Powered by Advanced AI Technology</div>
+                    <div style="font-size: 12px;">Klik tombol di bawah untuk memulai</div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <div class="input-box">
+                        <button class="feature-btn" onclick="toggleFeatureMenu()">🎯</button>
+                        <textarea id="messageInput" placeholder="Ketik pesan atau gunakan fitur AI..." rows="1" onkeydown="handleKeyDown(event)"></textarea>
+                        <button class="feature-btn" onclick="handleMicrophone()">🎤</button>
+                    </div>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FEATURE MENU -->
+    <div class="feature-menu" id="featureMenu">
+        <div class="feature-item" onclick="useFeature('summarize')"><div class="icon">📋</div>Ringkasan</div>
+        <div class="feature-item" onclick="useFeature('translate')"><div class="icon">🌐</div>Terjemah</div>
+        <div class="feature-item" onclick="useFeature('code')"><div class="icon">💻</div>Coding</div>
+        <div class="feature-item" onclick="useFeature('creative')"><div class="icon">✍️</div>Kreatif</div>
+        <div class="feature-item" onclick="useFeature('analyze')"><div class="icon">📊</div>Analisis</div>
+        <div class="feature-item" onclick="useFeature('explain')"><div class="icon">🎓</div>Jelaskan</div>
+        <div class="feature-item" onclick="useFeature('brainstorm')"><div class="icon">💡</div>Brainstorm</div>
+        <div class="feature-item" onclick="useFeature('improve')"><div class="icon">⬆️</div>Tingkatkan</div>
+        <div class="feature-item" onclick="useFeature('debug')"><div class="icon">🐛</div>Debug</div>
+        <div class="feature-item" onclick="useFeature('refactor')"><div class="icon">🔄</div>Refactor</div>
+        <div class="feature-item" onclick="useFeature('optimize')"><div class="icon">⚡</div>Optimasi</div>
+        <div class="feature-item" onclick="useFeature('test')"><div class="icon">✅</div>Test</div>
+        <div class="feature-item" onclick="useFeature('qa')"><div class="icon">❓</div>Q&A</div>
+        <div class="feature-item" onclick="useFeature('json')"><div class="icon">📦</div>JSON</div>
+        <div class="feature-item" onclick="useFeature('csv')"><div class="icon">📊</div>CSV</div>
+        <div class="feature-item" onclick="useFeature('regex')"><div class="icon">🔍</div>RegEx</div>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-title">⚙️ Pengaturan</div>
+            <div class="modal-content">
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px;">Suara Notifikasi</label>
+                    <input type="checkbox" id="soundToggle" checked>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px;">Mode Gelap</label>
+                    <input type="checkbox" id="darkModeToggle" checked>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 8px;">Simpan Riwayat</label>
+                    <input type="checkbox" id="historyToggle" checked>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeModal('settingsModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="aboutModal">
+        <div class="modal">
+            <div class="modal-title">ℹ️ Tentang Claude AI</div>
+            <div class="modal-content">
+                <strong>Claude AI v2.0</strong><br>
+                Dikembangkan oleh Andres<br><br>
+                
+                <strong>100+ Fitur AI:</strong><br>
+                ✓ Analisis Teks<br>
+                ✓ Pembuatan Kode<br>
+                ✓ Terjemahan<br>
+                ✓ Brainstorming Kreatif<br>
+                ✓ Q&A Cerdas<br>
+                ✓ Dan 95 fitur lainnya!<br><br>
+                
+                <strong>Teknologi:</strong><br>
+                HTML5 + JavaScript (Vanilla)<br>
+                Integrasi API Claude Anthropic<br>
+                UI Responsif & Modern
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeModal('aboutModal')">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ CONSTANTS & STATE ============
+        const API_KEY = 'sk-ant-'; // Ganti dengan key Anda
+        const API_URL = 'https://api.anthropic.com/v1/messages';
+        
+        let messages = [];
+        let chatHistory = [];
+        let currentChatId = Date.now();
+        let isLoading = false;
+
+        // ============ FEATURES ============
+        const features = {
+            summarize: 'Ringkas teks berikut ke poin-poin utama yang jelas dan ringkas',
+            translate: 'Terjemahkan teks berikut ke Bahasa Inggris dengan akurat',
+            code: 'Buat kode JavaScript yang efisien dan clean untuk tugas:',
+            creative: 'Buat cerita kreatif yang menarik dengan tema:',
+            analyze: 'Analisis data berikut dan berikan insight berharga:',
+            explain: 'Jelaskan konsep berikut dengan cara yang mudah dipahami:',
+            brainstorm: 'Berikan 10 ide kreatif untuk:',
+            improve: 'Tingkatkan teks berikut agar lebih profesional dan menarik:',
+            debug: 'Temukan dan perbaiki bug dalam kode ini:',
+            refactor: 'Refactor kode ini agar lebih bersih dan efisien:',
+            optimize: 'Optimalkan kode ini untuk performa lebih baik:',
+            test: 'Buat test case lengkap untuk fungsi ini:',
+            qa: 'Jawab pertanyaan ini dengan detail dan akurat:',
+            json: 'Konversi data berikut ke format JSON yang valid:',
+            csv: 'Konversi data berikut ke format CSV:',
+            regex: 'Buat regex pattern untuk:',
+            poem: 'Buat puisi indah dengan tema:',
+            story: 'Tulis cerita pendek dengan karakter:',
+            joke: 'Buat lelucon lucu tentang:',
+            email: 'Tulis email profesional untuk:',
+            report: 'Buat laporan singkat tentang:',
+            research: 'Lakukan riset dan jelaskan:',
+            compare: 'Bandingkan perbedaan antara:',
+            pros_cons: 'Analisis kelebihan dan kekurangan dari:',
+            summary: 'Buat resume singkat untuk:',
+            outline: 'Buat outline detail untuk:',
+            guide: 'Buat panduan step-by-step untuk:',
+            tutorial: 'Buat tutorial lengkap tentang:',
+            faqs: 'Buat FAQ untuk produk:',
+            tips: 'Berikan 10 tips berguna untuk:',
+            checklist: 'Buat checklist lengkap untuk:',
+            roadmap: 'Buat roadmap proyek untuk:',
+            strategy: 'Buat strategi marketing untuk:',
+            pitch: 'Buat pitch persuasif untuk:',
+            proposal: 'Buat proposal bisnis untuk:',
+            sop: 'Buat SOP (Standard Operating Procedure) untuk:',
+            policy: 'Buat kebijakan untuk:',
+            script: 'Buat script dialog untuk:',
+            lyrics: 'Buat lirik lagu dengan tema:',
+            speech: 'Buat pidato inspiratif untuk:',
+            quote: 'Buat 10 kutipan inspiratif tentang:',
+            tagline: 'Buat tagline menarik untuk:',
+            slogan: 'Buat slogan untuk kampanye:',
+            menu: 'Buat menu restoran untuk:',
+            recipe: 'Buat resep untuk hidangan:',
+            workout: 'Buat program workout untuk:',
+            diet: 'Buat rencana diet untuk:',
+            meditation: 'Buat script meditasi tentang:',
+            affirmation: 'Buat affirmasi positif untuk:',
+            motivation: 'Berikan motivasi dan inspirasi untuk:',
+            advice: 'Berikan saran bijak untuk:',
+            life_hack: 'Bagikan life hack untuk:',
+            productivity: 'Buat sistem produktivitas untuk:',
+            time_management: 'Buat strategi manajemen waktu untuk:',
+            goal_setting: 'Buat rencana goal setting untuk:',
+            habit: 'Buat plan untuk membangun habit:',
+            ml: 'Jelaskan Machine Learning untuk:',
+            ai: 'Jelaskan AI dan cara kerjanya dalam konteks:',
+            web: 'Jelaskan web development untuk:',
+            mobile: 'Jelaskan mobile development untuk:',
+            devops: 'Jelaskan DevOps untuk:',
+            security: 'Jelaskan cybersecurity untuk:',
+            database: 'Jelaskan database design untuk:',
+            api: 'Jelaskan API design untuk:',
+            architecture: 'Jelaskan software architecture untuk:',
+            pattern: 'Jelaskan design pattern:',
+            algorithm: 'Jelaskan algoritma:',
+            data_structure: 'Jelaskan struktur data:',
+            network: 'Jelaskan networking untuk:',
+            cloud: 'Jelaskan cloud computing untuk:',
+            docker: 'Jelaskan Docker dan containerization untuk:',
+            kubernetes: 'Jelaskan Kubernetes untuk:',
+            git: 'Jelaskan Git workflow untuk:',
+            cicd: 'Jelaskan CI/CD pipeline untuk:',
+            testing: 'Jelaskan testing strategy untuk:',
+            monitoring: 'Jelaskan monitoring dan logging untuk:',
+            seo: 'Buat strategi SEO untuk:',
+            seo_content: 'Buat konten SEO-friendly untuk:',
+            social_media: 'Buat strategi social media untuk:',
+            content: 'Buat kalender konten untuk:',
+            email_marketing: 'Buat kampanye email marketing untuk:',
+            copywriting: 'Tulis copy yang persuasif untuk:',
+            landing_page: 'Buat copy landing page untuk:',
+            product_desc: 'Tulis deskripsi produk untuk:',
+            review: 'Tulis review terstruktur tentang:',
+            comparison: 'Buat perbandingan detail antara:',
+            interview: 'Buat pertanyaan interview untuk posisi:',
+            cv: 'Buat CV profesional untuk posisi:',
+            cover_letter: 'Buat surat lamaran untuk:',
+            portfolio: 'Buat deskripsi portfolio untuk:',
+            brand: 'Buat brand story untuk:',
+            vision: 'Buat vision statement untuk:',
+            mission: 'Buat mission statement untuk:',
+            values: 'Buat core values untuk:',
+            culture: 'Buat budaya perusahaan untuk:',
+            feedback: 'Tulis feedback konstruktif untuk:',
+            apology: 'Tulis permintaan maaf untuk:',
+            thank_you: 'Tulis terima kasih untuk:',
+            congratulation: 'Tulis ucapan selamat untuk:',
+            condolence: 'Tulis belasungkawa untuk:',
+            love_letter: 'Tulis surat cinta untuk:',
+            invitation: 'Buat undangan untuk acara:'
+        };
+
+        // ============ UI FUNCTIONS ============
+        function newChat() {
+            currentChatId = Date.now();
+            messages = [];
+            document.getElementById('chatContainer').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🤖</div>
+                    <div style="font-size: 16px; font-weight: 600; color: #ececec;">Percakapan Baru</div>
+                    <div style="font-size: 14px;">Mulai berbicara dengan Claude AI</div>
+                </div>
+            `;
+            document.getElementById('messageInput').value = '';
+            document.getElementById('messageInput').focus();
+        }
+
+        function toggleFeatureMenu() {
+            const menu = document.getElementById('featureMenu');
+            menu.classList.toggle('active');
+        }
+
+        function useFeature(feature) {
+            const prefix = features[feature] || 'Bantu saya dengan:';
+            document.getElementById('messageInput').value = prefix + ' ';
+            document.getElementById('messageInput').focus();
+            document.getElementById('featureMenu').classList.remove('active');
+            document.getElementById('messageInput').select();
+        }
+
+        function showSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function showAbout() {
+            document.getElementById('aboutModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function handleMicrophone() {
+            if ('webkitSpeechRecognition' in window) {
+                const recognition = new webkitSpeechRecognition();
+                recognition.lang = 'id-ID';
+                recognition.start();
+                
+                recognition.onresult = (event) => {
+                    let transcript = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                    document.getElementById('messageInput').value = transcript;
+                    document.getElementById('messageInput').focus();
+                };
+            } else {
+                alert('Speech Recognition tidak didukung browser Anda');
+            }
+        }
+
+        // ============ CHAT FUNCTIONS ============
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+
+            if (!message || isLoading) return;
+
+            isLoading = true;
+            document.getElementById('sendBtn').disabled = true;
+            input.value = '';
+
+            // Show empty state if first message
+            const container = document.getElementById('chatContainer');
+            if (container.querySelector('.empty-state')) {
+                container.innerHTML = '';
+            }
+
+            // Add user message
+            addMessage('user', message);
+            messages.push({ role: 'user', content: message });
+
+            // Show typing indicator
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message assistant';
+            typingDiv.innerHTML = `
+                <div class="message-avatar assistant">🤖</div>
+                <div class="message-content" style="padding: 8px;">
+                    <div class="typing">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(typingDiv);
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': API_KEY,
+                        'anthropic-version': '2023-06-01'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-3-5-sonnet-20241022',
+                        max_tokens: 2048,
+                        messages: messages
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const assistantMessage = data.content[0].text;
+                
+                messages.push({ role: 'assistant', content: assistantMessage });
+                
+                // Remove typing indicator
+                typingDiv.remove();
+                
+                // Add assistant message
+                addMessage('assistant', assistantMessage);
+                
+                // Save to history
+                saveChatHistory();
+
+            } catch (error) {
+                typingDiv.remove();
+                addMessage('assistant', `❌ Error: ${error.message}\n\nPastikan API key sudah benar dan format pesan valid.`);
+            }
+
+            isLoading = false;
+            document.getElementById('sendBtn').disabled = false;
+            input.focus();
+        }
+
+        function addMessage(role, content) {
+            const container = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const avatar = role === 'user' ? '👤' : '🤖';
+            const avatarClass = role === 'user' ? 'user' : 'assistant';
+            
+            // Format content (simple markdown)
+            let formattedContent = content
+                .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\n/g, '<br>');
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar ${avatarClass}">${avatar}</div>
+                <div class="message-content">${formattedContent}</div>
+            `;
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function saveChatHistory() {
+            const summary = messages.find(m => m.role === 'user')?.content.substring(0, 50) || 'Chat baru';
+            chatHistory.push({
+                id: currentChatId,
+                summary: summary,
+                messages: messages,
+                timestamp: new Date()
+            });
+            
+            // Limit history to 20 chats
+            if (chatHistory.length > 20) {
+                chatHistory = chatHistory.slice(-20);
+            }
+            
+            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+            updateChatHistoryUI();
+        }
+
+        function updateChatHistoryUI() {
+            const historyDiv = document.getElementById('chatHistory');
+            historyDiv.innerHTML = chatHistory
+                .reverse()
+                .map(chat => `
+                    <div class="chat-item ${chat.id === currentChatId ? 'active' : ''}" onclick="loadChat(${chat.id})">
+                        ${chat.summary}...
+                    </div>
+                `)
+                .join('');
+        }
+
+        function loadChat(chatId) {
+            const chat = chatHistory.find(c => c.id === chatId);
+            if (chat) {
+                currentChatId = chatId;
+                messages = chat.messages;
+                
+                const container = document.getElementById('chatContainer');
+                container.innerHTML = '';
+                
+                messages.forEach(msg => {
+                    addMessage(msg.role, msg.content);
+                });
+                
+                updateChatHistoryUI();
+            }
+        }
+
+        // ============ INITIALIZATION ============
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('chatHistory');
+            if (saved) {
+                chatHistory = JSON.parse(saved);
+                updateChatHistoryUI();
+            }
+            
+            // Close modals on background click
+            document.querySelectorAll('.modal-overlay').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.remove('active');
+                    }
+                });
+            });
+
+            // Close feature menu on outside click
+            document.addEventListener('click', (e) => {
+                const menu = document.getElementById('featureMenu');
+                const featureBtn = e.target.closest('.feature-btn');
+                if (!featureBtn && !menu.contains(e.target)) {
+                    menu.classList.remove('active');
+                }
+            });
+
+            document.getElementById('messageInput').focus();
+        });
+
+        // Auto-save chats every 30 seconds
+        setInterval(() => {
+            if (messages.length > 0) {
+                saveChatHistory();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
